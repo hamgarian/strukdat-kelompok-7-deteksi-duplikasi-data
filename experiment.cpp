@@ -437,47 +437,123 @@ void simpan_html(const std::vector<CatatanPerforma>& data) {
     }
 
     std::ofstream html("output/grafik_performa.html");
-    html << "<!doctype html><html><head><meta charset=\"utf-8\"><title>Grafik Performa 3 DS</title>";
-    html << "<style>body{font-family:Arial,sans-serif;margin:32px;color:#202124;background:#fafafa}"
-         << ".row{display:grid;grid-template-columns:120px 80px 1fr 140px;gap:10px;align-items:center;margin:6px 0}"
-         << ".bar{height:20px;border-radius:3px}"
-         << ".hash{background:#0f766e}.bst{background:#7c3aed}.vector{background:#c2410c}"
-         << "h1,h2{margin-top:28px}.note{color:#5f6368}"
-         << "table{border-collapse:collapse;margin:16px 0}th,td{border:1px solid #ddd;padding:6px 10px;text-align:right}"
-         << "th{background:#f5f5f5}</style></head><body>";
-    html << "<h1>Grafik Perbandingan Performa — 3 Struktur Data</h1>";
-    html << "<p class=\"note\">Hash=#0f766e | BST=#7c3aed | Vector=#c2410c</p>";
+    if (data.empty()) return;
+    
+    // Ambil data tes yang terakhir (ukuran paling besar/akhir) untuk ditampilkan di grafik
+    const CatatanPerforma& c = data.back();
+    
+    double memHashMB = c.memoriHashBytes / (1024.0 * 1024.0);
+    double memBstMB = c.memoriBstBytes / (1024.0 * 1024.0);
+    double memVecMB = c.memoriVectorBytes / (1024.0 * 1024.0);
 
-    html << "<h2>Waktu Deteksi Konten</h2>";
-    for (const CatatanPerforma& c : data) {
-        auto pct = [&](double v) { return waktu_maks > 0 ? (v / waktu_maks) * 100.0 : 0.0; };
-        std::string label = std::to_string(c.jumlahData) + "/" + std::to_string(c.persenDuplikat) + "%";
-        html << "<div class=\"row\"><b>" << label << "</b><span>Hash</span><div class=\"bar hash\" style=\"width:"
-             << pct(c.deteksiHashMs) << "%\"></div><span>" << std::fixed << std::setprecision(3)
-             << c.deteksiHashMs << " ms</span></div>";
-        html << "<div class=\"row\"><b>" << label << "</b><span>BST</span><div class=\"bar bst\" style=\"width:"
-             << pct(c.deteksiBstMs) << "%\"></div><span>" << c.deteksiBstMs << " ms</span></div>";
-        html << "<div class=\"row\"><b>" << label << "</b><span>Vector</span><div class=\"bar vector\" style=\"width:"
-             << pct(c.deteksiVectorMs) << "%\"></div><span>" << c.deteksiVectorMs << " ms</span></div>";
-    }
+    html << R"(<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Grafik Performa 3 DS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #ffffff; padding: 40px; }
+        .chart-wrapper { width: 700px; background: #fff; padding: 20px; margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+    <div class="chart-wrapper">
+        <canvas id="waktuChart"></canvas>
+        <div style="text-align: center; margin-top: 20px; font-family: 'Times New Roman', Times, serif; font-size: 16px;">
+            Gambar 6.1 Perbandingan Waktu Deteksi Konten (Skala: )" << c.jumlahData << R"( data)
+        </div>
+    </div>
+    
+    <div class="chart-wrapper">
+        <canvas id="memoriChart"></canvas>
+        <div style="text-align: center; margin-top: 20px; font-family: 'Times New Roman', Times, serif; font-size: 16px;">
+            Gambar 6.2 Perbandingan Estimasi Memori (Skala: )" << c.jumlahData << R"( data)
+        </div>
+    </div>
 
-    html << "<h2>Estimasi Memori</h2>";
-    html << "<p style=\"color:#b91c1c;font-weight:bold;margin-bottom:16px;max-width:800px;line-height:1.5\">"
-         << "Catatan Akademis: Grafik penggunaan memori akan terlihat menurun (anomali) pada skala &ge; 10.000 data. "
-         << "Hal ini karena sistem secara otomatis mengaktifkan <i>Dynamic File Sizing</i> yang mengecilkan ukuran "
-         << "rata-rata file (dari ~3KB menjadi ~750 bytes) demi mencegah Memory Crash (std::bad_alloc) pada batas limit 32-bit. "
-         << "Penurunan memori ini adalah <i>expected behavior</i>.</p>";
-    for (const CatatanPerforma& c : data) {
-        double dm = static_cast<double>(memori_maks);
-        auto pct = [&](size_t v) { return dm > 0 ? (static_cast<double>(v) / dm) * 100.0 : 0.0; };
-        std::string label = std::to_string(c.jumlahData);
-        html << "<div class=\"row\"><b>" << label << "</b><span>Hash</span><div class=\"bar hash\" style=\"width:"
-             << pct(c.memoriHashBytes) << "%\"></div><span>" << format_bytes(c.memoriHashBytes) << "</span></div>";
-        html << "<div class=\"row\"><b>" << label << "</b><span>BST</span><div class=\"bar bst\" style=\"width:"
-             << pct(c.memoriBstBytes) << "%\"></div><span>" << format_bytes(c.memoriBstBytes) << "</span></div>";
-        html << "<div class=\"row\"><b>" << label << "</b><span>Vector</span><div class=\"bar vector\" style=\"width:"
-             << pct(c.memoriVectorBytes) << "%\"></div><span>" << format_bytes(c.memoriVectorBytes) << "</span></div>";
-    }
+    <script>
+        // Chart 1: Waktu Deteksi (ms)
+        const ctxWaktu = document.getElementById('waktuChart').getContext('2d');
+        new Chart(ctxWaktu, {
+            type: 'bar',
+            data: {
+                labels: ['Hash Table', 'BST', 'Vector'],
+                datasets: [{
+                    data: [)" << c.deteksiHashMs << ", " << c.deteksiBstMs << ", " << c.deteksiVectorMs << R"(],
+                    backgroundColor: '#4285F4',
+                    maxBarThickness: 120
+                }]
+            },
+            options: {
+                plugins: {
+                    title: { 
+                        display: true, 
+                        text: 'Waktu Deteksi (ms) vs Struktur Data', 
+                        font: { size: 24, family: 'Arial', weight: 'normal' }, 
+                        align: 'start', 
+                        color: '#5f6368',
+                        padding: { bottom: 20 }
+                    },
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#e0e0e0', drawBorder: false },
+                        ticks: { font: { size: 14 } },
+                        title: { display: true, text: 'Waktu Deteksi (ms)', font: { size: 14 } }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { font: { size: 14 } },
+                        title: { display: true, text: 'Struktur Data', font: { size: 14 }, padding: { top: 10 } }
+                    }
+                }
+            }
+        });
 
-    html << "</body></html>";
+        // Chart 2: Estimasi Memori (MB)
+        const ctxMemori = document.getElementById('memoriChart').getContext('2d');
+        new Chart(ctxMemori, {
+            type: 'bar',
+            data: {
+                labels: ['Hash Table', 'BST', 'Vector'],
+                datasets: [{
+                    data: [)" << memHashMB << ", " << memBstMB << ", " << memVecMB << R"(],
+                    backgroundColor: '#4285F4',
+                    maxBarThickness: 120
+                }]
+            },
+            options: {
+                plugins: {
+                    title: { 
+                        display: true, 
+                        text: 'Estimasi Memori vs Struktur Data', 
+                        font: { size: 24, family: 'Arial', weight: 'normal' }, 
+                        align: 'start', 
+                        color: '#5f6368',
+                        padding: { bottom: 20 }
+                    },
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#e0e0e0', drawBorder: false },
+                        ticks: { font: { size: 14 }, stepSize: 25 },
+                        title: { display: true, text: 'Estimasi Memori (MB)', font: { size: 14 } }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { font: { size: 14 } },
+                        title: { display: true, text: 'Struktur Data', font: { size: 14 }, padding: { top: 10 } }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+)";
 }

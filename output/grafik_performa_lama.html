@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Grafik Performa 3 DS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #ffffff; padding: 40px; }
+        .chart-wrapper { width: 700px; background: #fff; padding: 20px; margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+    <div class="chart-wrapper">
+        <canvas id="waktuChart"></canvas>
+        <div style="text-align: center; margin-top: 20px; font-family: 'Times New Roman', Times, serif; font-size: 16px;">
+            Gambar 6.1 Perbandingan Waktu Deteksi Konten
+        </div>
+    </div>
+    
+    <div class="chart-wrapper">
+        <canvas id="memoriChart"></canvas>
+        <div style="text-align: center; margin-top: 20px; font-family: 'Times New Roman', Times, serif; font-size: 16px;">
+            Gambar 6.2 Perbandingan Estimasi Memori
+        </div>
+    </div>
+
+    <script>
+        // Chart 1: Waktu Deteksi (ms)
+        const ctxWaktu = document.getElementById('waktuChart').getContext('2d');
+        new Chart(ctxWaktu, {
+            type: 'bar',
+            data: {
+                labels: ['Hash Table', 'BST', 'Vector'],
+                datasets: [{
+                    data: [4.327, 3.184, 32.723],
+                    backgroundColor: '#4285F4',
+                    maxBarThickness: 120
+                }]
+            },
+            options: {
+                plugins: {
+                    title: { 
+                        display: true, 
+                        text: 'Waktu Deteksi (ms) vs Struktur Data', 
+                        font: { size: 24, family: 'Arial', weight: 'normal' }, 
+                        align: 'start', 
+                        color: '#5f6368',
+                        padding: { bottom: 20 }
+                    },
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#e0e0e0', drawBorder: false },
+                        ticks: { font: { size: 14 } },
+                        title: { display: true, text: 'Waktu Deteksi (ms)', font: { size: 14 } }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { font: { size: 14 } },
+                        title: { display: true, text: 'Struktur Data', font: { size: 14 }, padding: { top: 10 } }
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Estimasi Memori (MB)
+        const ctxMemori = document.getElementById('memoriChart').getContext('2d');
+        new Chart(ctxMemori, {
+            type: 'bar',
+            data: {
+                labels: ['Hash Table', 'BST', 'Vector'],
+                datasets: [{
+                    data: [113.86, 56.96, 57.12],
+                    backgroundColor: '#4285F4',
+                    maxBarThickness: 120
+                }]
+            },
+            options: {
+                plugins: {
+                    title: { 
+                        display: true, 
+                        text: 'Estimasi Memori vs Struktur Data', 
+                        font: { size: 24, family: 'Arial', weight: 'normal' }, 
+                        align: 'start', 
+                        color: '#5f6368',
+                        padding: { bottom: 20 }
+                    },
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#e0e0e0', drawBorder: false },
+                        ticks: { font: { size: 14 }, stepSize: 25 },
+                        title: { display: true, text: 'Estimasi Memori (MB)', font: { size: 14 } }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { font: { size: 14 } },
+                        title: { display: true, text: 'Struktur Data', font: { size: 14 }, padding: { top: 10 } }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
