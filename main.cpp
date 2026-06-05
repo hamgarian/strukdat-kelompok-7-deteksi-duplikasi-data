@@ -48,6 +48,7 @@ int main() {
     while (pilihan != -9) {
         std::cout << MENU_TEXT;
         if (!(std::cin >> pilihan)) {
+            if (std::cin.eof()) break;
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             continue;
