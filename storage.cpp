@@ -235,13 +235,12 @@ void populate_data(ArsipIndex& idx, const std::string& folder,
         return;
     }
 
-    int min_kb = (jumlah >= 5000) ? 10 : 100;
-    int max_kb = (jumlah >= 5000) ? 30 : 300;
-
-    std::cout << "\n[System] Generate " << jumlah << " file dummy ("
-              << min_kb << "KB-" << max_kb << "KB, " << persen_duplikat << "% duplikat)...\n";
-    if (jumlah >= 5000)
-        std::cout << "[System] Dataset besar, proses dapat memakan waktu beberapa saat.\n";
+    std::cout << "\n[System] Generate " << jumlah << " file dummy fisik di folder ("
+              << persen_duplikat << "% duplikat)...\n";
+    if (jumlah >= 100000)
+        std::cout << "[!] PERINGATAN: Membuat ratusan ribu/jutaan file fisik di disk Windows akan memakan waktu lama (I/O Bottleneck).\n";
+    else if (jumlah >= 10000)
+        std::cout << "[System] Menggunakan ukuran file mini untuk mencegah Memory Crash (std::bad_alloc) di skala besar.\n";
 
     srand(static_cast<unsigned int>(time(nullptr)));
 
@@ -266,7 +265,13 @@ void populate_data(ArsipIndex& idx, const std::string& folder,
             std::ofstream dst(file_path, std::ios::binary);
             if (dst.is_open()) { dst << isi; ++jumlah_duplikat; }
         } else {
-            int target_size = (min_kb * 1024) + (rand() % ((max_kb - min_kb + 1) * 1024));
+            int target_size;
+            // Optimasi agar tidak std::bad_alloc pada 32-bit compiler:
+            if (jumlah >= 1000000) target_size = 50 + rand() % 50;         // ~75 bytes
+            else if (jumlah >= 100000) target_size = 100 + rand() % 100;   // ~150 bytes
+            else if (jumlah >= 10000) target_size = 500 + rand() % 500;    // ~750 bytes
+            else target_size = 2000 + rand() % 2000;                       // ~3 KB
+
             std::ostringstream oss;
             int current = 0;
             while (current < target_size) {

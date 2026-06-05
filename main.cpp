@@ -245,16 +245,24 @@ int main() {
 
         // ======== 13. GENERATE DUMMY ========
         case 13: {
-            std::cout << "\nJumlah data: (1) 100  (2) 500  (3) 1000  (4) 5000  (5) 10000 -> Pilih: ";
+            std::cout << "\nPilih Skala Dataset:\n";
+            std::cout << " [ PENGEMBANGAN ] 1. 1,000 data\n";
+            std::cout << "                  2. 10,000 data\n";
+            std::cout << " [ OBSERVASI    ] 3. 100,000 data\n";
+            std::cout << "                  4. 500,000 data\n";
+            std::cout << " [ EKSTREM      ] 5. 1,000,000 data\n";
+            std::cout << "                  6. 2,500,000 data\n";
+            std::cout << "Pilih -> ";
             int sub; std::cin >> sub;
-            int jumlah = 100;
-            if (sub == 2) jumlah = 500;
-            else if (sub == 3) jumlah = 1000;
-            else if (sub == 4) jumlah = 5000;
-            else if (sub == 5) jumlah = 10000;
+            int jumlah = 1000;
+            if (sub == 2) jumlah = 10000;
+            else if (sub == 3) jumlah = 100000;
+            else if (sub == 4) jumlah = 500000;
+            else if (sub == 5) jumlah = 1000000;
+            else if (sub == 6) jumlah = 2500000;
 
-            int persen = 10;
-            std::cout << "Persen duplikat (0-100, default 10): ";
+            int persen = 15;
+            std::cout << "Persen duplikat (rekomendasi 10-20, default 15): ";
             if (std::cin.peek() == '\n') std::cin.ignore();
             std::string tmp;
             std::getline(std::cin, tmp);
@@ -263,7 +271,7 @@ int main() {
             }
 
             populate_data(idx, idx.folder, jumlah, persen);
-            std::cout << "[System] Memperbarui ketiga DS di RAM...\n";
+            std::cout << "[System] Memuat data dari folder ke RAM...\n";
             load_data_ke_memori(idx);
             break;
         }

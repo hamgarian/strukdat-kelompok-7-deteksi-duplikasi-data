@@ -90,11 +90,22 @@ HasilDeteksi deteksi_vector(ArsipIndex& idx, bool tampil_detail) {
     auto t0 = std::chrono::high_resolution_clock::now();
     std::vector<GrupLinear> grup_linear;
 
+    int iter_count = 0;
     for (const DataArsip& d : idx.files) {
         bool ditemukan = false;
         for (GrupLinear& g : grup_linear) {
             if (g.ukuran == d.ukuran && g.konten == d.konten) {
                 g.namaFile.push_back(d.namaFile); ditemukan = true; break;
+            }
+            iter_count++;
+            // Timeout check setiap 50.000 komparasi
+            if (iter_count > 50000) {
+                iter_count = 0;
+                double elapsed = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - t0).count();
+                if (elapsed > 10.0) { // Timeout 10 detik
+                    std::cout << "\n[!] Vector O(n^2) TIMEOUT (>10 detik). Operasi dihentikan karena skala data Ekstrem.\n";
+                    return {std::vector<GrupDuplikat>{}, std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t0).count(), estimasi_memori_vector(idx)};
+                }
             }
         }
         if (!ditemukan) grup_linear.push_back({d.ukuran, d.konten, {d.namaFile}});
@@ -165,7 +176,9 @@ void deteksi_metadata(ArsipIndex& idx, bool tampil_detail,
         std::vector<bool> diproses(n, false);
         std::vector<GrupDuplikat> hasil;
 
-        for (int i = 0; i < n; i++) {
+        int iter_count = 0;
+        bool timeout = false;
+        for (int i = 0; i < n && !timeout; i++) {
             if (diproses[i]) continue;
             std::vector<std::string> grup = {idx.files[i].namaFile};
             for (int j = i + 1; j < n; j++) {
@@ -174,6 +187,15 @@ void deteksi_metadata(ArsipIndex& idx, bool tampil_detail,
                     && idx.files[i].ukuran   == idx.files[j].ukuran) {
                     grup.push_back(idx.files[j].namaFile);
                     diproses[j] = true;
+                }
+                iter_count++;
+                if (iter_count > 50000) {
+                    iter_count = 0;
+                    double elapsed = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - t0).count();
+                    if (elapsed > 10.0) {
+                        std::cout << "\n[!] Vector Metadata O(n^2) TIMEOUT (>10 detik). Operasi dihentikan.\n";
+                        timeout = true; break;
+                    }
                 }
             }
             if (grup.size() > 1) {

@@ -314,19 +314,20 @@ void jalankan_perbandingan(ArsipIndex& idx, std::vector<CatatanPerforma>& riwaya
 // EKSPERIMEN OTOMATIS — 45 run
 // ============================================================
 void jalankan_eksperimen_otomatis(ArsipIndex& idx, std::vector<CatatanPerforma>& riwayat) {
-    std::vector<int> ukuran_ds  = {100, 500, 1000, 5000, 10000};
-    std::vector<int> persen_dup = {5, 15, 35};
+    // 1. Pengembangan, 2. Observasi, 3. Ekstrem/Stress Test
+    std::vector<int> ukuran_ds  = {1000, 10000, 100000, 500000, 1000000, 2500000};
+    std::vector<int> persen_dup = {10, 15, 20};
     const int REP = 3;
 
     riwayat.clear();
     std::cout << "\n=== EKSPERIMEN OTOMATIS (" << ukuran_ds.size() << " dataset x "
-              << persen_dup.size() << " skenario x " << REP << " replikasi) ===\n";
+              << persen_dup.size() << " skenario x " <<REP << " replikasi) ===\n";
 
     for (int n : ukuran_ds) {
         for (int p : persen_dup) {
             std::cout << "\n--- Dataset " << n << " file, " << p << "% duplikat ---\n";
             for (int r = 1; r <= REP; r++) {
-                std::cout << "  Replikasi " << r << "/" << REP << "...";
+                std::cout << "  Replikasi " << r << "/" << REP << "...\n";
                 populate_data(idx, idx.folder, n, p);
                 load_data_ke_memori(idx);
 

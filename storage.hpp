@@ -43,6 +43,11 @@ void hapus_dari_indeks(ArsipIndex& idx, const std::string& nama_file);
 void populate_data(ArsipIndex& idx, const std::string& folder,
                    int jumlah, int persen_duplikat = 10);
 
+/**
+ * Generate data dummy skala besar langsung ke memori (RAM).
+ */
+void populate_data_in_memory(ArsipIndex& idx, int jumlah, int persen_duplikat = 15);
+
 // --- Operasi CRUD ---
 
 /** Cari DataArsip by ID menggunakan Hash (O(1) avg). Kembalikan nullptr jika tidak ada. */
